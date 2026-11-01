@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:#f2f2f7;
+  font-family:-apple-system,BlinkMacSystemFont,
+  "Segoe UI",sans-serif;
+}
+
+.chat-wrapper{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+.header{
+  background:white;
+  padding:15px;
+  text-align:center;
+  font-weight:600;
+  border-bottom:1px solid #ddd;
+  position:sticky;
+  top:0;
+}
+
+.messages{
+  flex:1;
+  overflow-y:auto;
+  padding:15px;
+}
+
+.message-row{
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+  margin-bottom:12px;
+}
+
+.avatar{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  background:#0A84FF;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  font-weight:bold;
+  flex-shrink:0;
+}
+
+.message-block{
+  max-width:75%;
+}
+
+.sender{
+  font-size:12px;
+  color:#666;
+  margin-left:10px;
+  margin-bottom:4px;
+}
+
+.bubble{
+  background:#E5E5EA;
+  color:black;
+  padding:10px 15px;
+  border-radius:20px;
+  display:inline-block;
+  word-wrap:break-word;
+}
+
+.time{
+  font-size:11px;
+  color:#999;
+  margin-top:3px;
+  margin-left:10px;
+}
+
+.composer{
+  background:white;
+  border-top:1px solid #ddd;
+  padding:10px;
+}
+
+.name-input{
+  width:100%;
+  padding:10px;
+  margin-bottom:8px;
+  border:1px solid #ddd;
+  border-radius:10px;
+}
+
+.bottom-row{
+  display:flex;
+  gap:8px;
+}
+
+.message-input{
+  flex:1;
+  border:1px solid #ddd;
+  border-radius:22px;
+  padding:12px;
+  resize:none;
+  font-family:inherit;
+}
+
+.send-btn{
+  width:48px;
+  height:48px;
+  border:none;
+  border-radius:50%;
+  background:#0A84FF;
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+}
+
+.send-btn:hover{
+  background:#0071E3;
+}
+</style>
+</head>
+
+<body>
+
+<div class="chat-wrapper">
+
+<div class="header">
+Community Chat
+</div>
+
+<div id="messages" class="messages"></div>
+
+<div class="composer">
+
+<input
+id="name"
+class="name-input"
+placeholder="Your name">
+
+<div class="bottom-row">
+
+<textarea
+id="message"
+rows="1"
+class="message-input"
+placeholder="Type a message..."></textarea>
+
+<button
+class="send-btn"
+onclick="submitMessage()">
+↑
+</button>
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+const API_URL =
+"PASTE_YOUR_APPS_SCRIPT_URL_HERE";
+
+let previousCount = 0;
+
+async function loadMessages(){
+
+const response = await fetch(API_URL);
+const messages = await response.json();
+
+const container =
+document.getElementById("messages");
+
+const shouldAutoScroll =
+container.scrollHeight -
+container.scrollTop <=
+container.clientHeight + 150;
+
+container.innerHTML = "";
+
+messages.forEach(msg=>{
+
+const initial =
+(msg.name || "?")
+.charAt(0)
+.toUpperCase();
+
+container.innerHTML += `
+<div class="message-row">
+
+<div class="avatar">
+${initial}
+</div>
+
+<div class="message-block">
+
+<div class="sender">
+${msg.name}
+</div>
+
+<div class="bubble">
+${msg.message}
+</div>
+
+<div class="time">
+${new Date(msg.time)
+.toLocaleString()}
+</div>
+
+</div>
+
+</div>
+`;
+
+});
+
+if(
+shouldAutoScroll ||
+messages.length > previousCount
+){
+container.scrollTop =
+container.scrollHeight;
+}
+
+previousCount = messages.length;
+}
+
+async function submitMessage(){
+
+const name =
+document.getElementById("name")
+.value.trim() || "Anonymous";
+
+const message =
+document.getElementById("message")
+.value.trim();
+
+if(!message) return;
+
+await fetch(API_URL,{
+method:"POST",
+body:JSON.stringify({
+name:name,
+message:message
+})
+});
+
+document.getElementById("message").value =
+"";
+
+loadMessages();
+}
+
+document
+.getElementById("message")
+.addEventListener("keydown",e=>{
+
+if(e.key==="Enter" && !e.shiftKey){
+e.preventDefault();
+submitMessage();
+}
+
+});
+
+loadMessages();
+
+setInterval(loadMessages,3000);
+
+</script>
+
+</body>
+</html>
