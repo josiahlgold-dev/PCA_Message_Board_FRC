@@ -1,283 +1,207 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-*{
-  box-sizing:border-box;
-}
-
-body{
-  margin:0;
-  background:#f2f2f7;
-  font-family:-apple-system,BlinkMacSystemFont,
-  "Segoe UI",sans-serif;
-}
-
-.chat-wrapper{
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-}
-
-.header{
-  background:white;
-  padding:15px;
-  text-align:center;
-  font-weight:600;
-  border-bottom:1px solid #ddd;
-  position:sticky;
-  top:0;
-}
-
-.messages{
-  flex:1;
-  overflow-y:auto;
-  padding:15px;
-}
-
-.message-row{
-  display:flex;
-  align-items:flex-end;
-  gap:8px;
-  margin-bottom:12px;
-}
-
-.avatar{
-  width:32px;
-  height:32px;
-  border-radius:50%;
-  background:#0A84FF;
-  color:white;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:13px;
-  font-weight:bold;
-  flex-shrink:0;
-}
-
-.message-block{
-  max-width:75%;
-}
-
-.sender{
-  font-size:12px;
-  color:#666;
-  margin-left:10px;
-  margin-bottom:4px;
-}
-
-.bubble{
-  background:#E5E5EA;
-  color:black;
-  padding:10px 15px;
-  border-radius:20px;
-  display:inline-block;
-  word-wrap:break-word;
-}
-
-.time{
-  font-size:11px;
-  color:#999;
-  margin-top:3px;
-  margin-left:10px;
-}
-
-.composer{
-  background:white;
-  border-top:1px solid #ddd;
-  padding:10px;
-}
-
-.name-input{
-  width:100%;
-  padding:10px;
-  margin-bottom:8px;
-  border:1px solid #ddd;
-  border-radius:10px;
-}
-
-.bottom-row{
-  display:flex;
-  gap:8px;
-}
-
-.message-input{
-  flex:1;
-  border:1px solid #ddd;
-  border-radius:22px;
-  padding:12px;
-  resize:none;
-  font-family:inherit;
-}
-
-.send-btn{
-  width:48px;
-  height:48px;
-  border:none;
-  border-radius:50%;
-  background:#0A84FF;
-  color:white;
-  font-size:18px;
-  cursor:pointer;
-}
-
-.send-btn:hover{
-  background:#0071E3;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community Chat</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 800px;
+      height: 90vh;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      background: #f8f9fa;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+      border-bottom: 1px solid #dee2e6;
+      color: #333;
+    }
+    .messages-area {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #f8f9fa;
+    }
+    .message-bubble {
+      background: #ffffff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      max-width: 70%;
+      align-self: flex-start;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      border: 1px solid #e9ecef;
+    }
+    .message-meta {
+      font-size: 0.75rem;
+      color: #6c757d;
+      margin-bottom: 4px;
+      font-weight: bold;
+    }
+    .message-text {
+      font-size: 0.95rem;
+      color: #212529;
+      word-break: break-word;
+    }
+    .input-area {
+      padding: 15px;
+      background: #ffffff;
+      border-top: 1px solid #dee2e6;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ced4da;
+      border-radius: 20px;
+      outline: none;
+      font-size: 0.95rem;
+    }
+    input[type="text"]:focus {
+      border-color: #007bff;
+    }
+    .send-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
+      transition: background 0.2s;
+    }
+    .send-btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="chat-wrapper">
+  <div class="chat-container">
+    <div class="chat-header">Community Chat</div>
+    
+    <!-- Messages will dynamically load here -->
+    <div class="messages-area" id="messagesArea"></div>
+    
+    <div class="input-area">
+      <div class="input-row">
+        <input type="text" id="usernameInput" placeholder="Your name" required>
+      </div>
+      <div class="input-row">
+        <input type="text" id="messageInput" placeholder="Type a message..." required>
+        <button class="send-btn" id="sendBtn">➔</button>
+      </div>
+    </div>
+  </div>
 
-<div class="header">
-Community Chat
-</div>
+  <script>
+    // 1. PASTE YOUR DEPLOYED GOOGLE WEB APP URL HERE
+    const WEB_APP_URL = "YOUR_DEPLOYED_WEB_APP_EXEC_URL"; 
 
-<div id="messages" class="messages"></div>
+    const messagesArea = document.getElementById('messagesArea');
+    const usernameInput = document.getElementById('usernameInput');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
 
-<div class="composer">
+    // 2. Fetch and render messages from Google Sheets
+    async function fetchMessages() {
+      try {
+        const response = await fetch(WEB_APP_URL);
+        const data = await response.json();
+        
+        // Clear old visual bubbles
+        messagesArea.innerHTML = '';
+        
+        // Loop through data and build bubbles
+        data.forEach(msg => {
+          const bubble = document.createElement('div');
+          bubble.className = 'message-bubble';
+          
+          bubble.innerHTML = `
+            <div class="message-meta">${msg.name || 'Anonymous'}</div>
+            <div class="message-text">${msg.message || ''}</div>
+          `;
+          messagesArea.appendChild(bubble);
+        });
+        
+        // Auto scroll down to the newest message
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+      } catch (err) {
+        console.error("Error loading chat data: ", err);
+      }
+    }
 
-<input
-id="name"
-class="name-input"
-placeholder="Your name">
+    // 3. Send a message to Google Sheets
+    async function postMessage() {
+      const name = usernameInput.value.trim();
+      const message = messageInput.value.trim();
 
-<div class="bottom-row">
+      if (!name || !message) return;
 
-<textarea
-id="message"
-rows="1"
-class="message-input"
-placeholder="Type a message..."></textarea>
+      // Lock input temporarily to prevent double clicking
+      messageInput.disabled = true;
 
-<button
-class="send-btn"
-onclick="submitMessage()">
-↑
-</button>
+      try {
+        await fetch(WEB_APP_URL, {
+          method: 'POST',
+          mode: 'no-cors', // Bypasses browser cross-origin policy limits
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name, message: message })
+        });
 
-</div>
-</div>
+        // Clear only the message box layout, preserve user's name
+        messageInput.value = '';
+        messageInput.disabled = false;
+        messageInput.focus();
 
-</div>
+        // Refresh UI data right after updating spreadsheet rows
+        setTimeout(fetchMessages, 1000);
+      } catch (err) {
+        console.error("Error sending chat data: ", err);
+        messageInput.disabled = false;
+      }
+    }
 
-<script>
+    // Event Listeners for actions
+    sendBtn.addEventListener('click', postMessage);
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') postMessage();
+    });
 
-const API_URL =
-"https://script.google.com/a/macros/ourpca.org/s/AKfycbwOgGwmxbO6ZC1wnurma0cERTcfv_PGV5CxuMs3RN-JR8CHvuElrOCXPHe6EsSOyRkfOQ/exec";
-
-let previousCount = 0;
-
-async function loadMessages(){
-
-const response = await fetch(API_URL);
-const messages = await response.json();
-
-const container =
-document.getElementById("messages");
-
-const shouldAutoScroll =
-container.scrollHeight -
-container.scrollTop <=
-container.clientHeight + 150;
-
-container.innerHTML = "";
-
-messages.forEach(msg=>{
-
-const initial =
-(msg.name || "?")
-.charAt(0)
-.toUpperCase();
-
-container.innerHTML += `
-<div class="message-row">
-
-<div class="avatar">
-${initial}
-</div>
-
-<div class="message-block">
-
-<div class="sender">
-${msg.name}
-</div>
-
-<div class="bubble">
-${msg.message}
-</div>
-
-<div class="time">
-${new Date(msg.time)
-.toLocaleString()}
-</div>
-
-</div>
-
-</div>
-`;
-
-});
-
-if(
-shouldAutoScroll ||
-messages.length > previousCount
-){
-container.scrollTop =
-container.scrollHeight;
-}
-
-previousCount = messages.length;
-}
-
-async function submitMessage(){
-
-const name =
-document.getElementById("name")
-.value.trim() || "Anonymous";
-
-const message =
-document.getElementById("message")
-.value.trim();
-
-if(!message) return;
-
-await fetch(API_URL,{
-method:"POST",
-body:JSON.stringify({
-name:name,
-message:message
-})
-});
-
-document.getElementById("message").value =
-"";
-
-loadMessages();
-}
-
-document
-.getElementById("message")
-.addEventListener("keydown",e=>{
-
-if(e.key==="Enter" && !e.shiftKey){
-e.preventDefault();
-submitMessage();
-}
-
-});
-
-loadMessages();
-
-setInterval(loadMessages,3000);
-
-</script>
+    // Automatically poll every 5 seconds to get updates from other users
+    fetchMessages();
+    setInterval(fetchMessages, 5000);
+  </script>
 
 </body>
 </html>
