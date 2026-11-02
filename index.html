@@ -124,84 +124,111 @@
     </div>
   </div>
 
-  <script>
-    // 1. PASTE YOUR DEPLOYED GOOGLE WEB APP URL HERE
-    const WEB_APP_URL = "https://script.google.com/a/macros/ourpca.org/s/AKfycbwOgGwmxbO6ZC1wnurma0cERTcfv_PGV5CxuMs3RN-JR8CHvuElrOCXPHe6EsSOyRkfOQ/exec"; 
+    <script>
+    // 1. PLACE YOUR EXACT DEPLOYED WEB APP URL HERE
+    // Make sure it ends in /exec and is copied directly from your deployment screen
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwyhT42wXqvTv6UAidrm0dHOam1ZWJ1uYBXiRbowwVSRbsBarBtfw3Y1Pt8Q7fdqHhozg/exec"; 
 
-    const messagesArea = document.getElementById('messagesArea');
-    const usernameInput = document.getElementById('usernameInput');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
-
-    // 2. Fetch and render messages from Google Sheets
+    // 2. FETCH AND READ THE SHEET DATA
     async function fetchMessages() {
       try {
         const response = await fetch(WEB_APP_URL);
         const data = await response.json();
         
-        // Clear old visual bubbles
+        // Find your message block area in the HTML layout
+        const messagesArea = document.getElementById('messagesArea') || document.querySelector('.messages-area') || document.body;
+        
+        // Clear out old text blocks so they don't stack duplicates on refresh
         messagesArea.innerHTML = '';
         
-        // Loop through data and build bubbles
+        // Loop through rows and construct message boxes dynamically
         data.forEach(msg => {
           const bubble = document.createElement('div');
           bubble.className = 'message-bubble';
+          bubble.style.cssText = "background:#ffffff; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #eee; width:fit-content; max-width:70%; word-break:break-word;";
           
           bubble.innerHTML = `
-            <div class="message-meta">${msg.name || 'Anonymous'}</div>
-            <div class="message-text">${msg.message || ''}</div>
+            <div style="font-size:0.75rem; color:#666; font-weight:bold;">${msg.name || 'Anonymous'} <span style="font-weight:normal; font-size:0.7rem; color:#aaa; margin-left:5px;">${msg.time || ''}</span></div>
+            <div style="font-size:0.95rem; color:#222; margin-top:3px;">${msg.message || ''}</div>
           `;
           messagesArea.appendChild(bubble);
         });
         
-        // Auto scroll down to the newest message
+        // Push scroll view down to the newest entries automatically
         messagesArea.scrollTop = messagesArea.scrollHeight;
       } catch (err) {
-        console.error("Error loading chat data: ", err);
+        console.error("Error loading chat data from Google Sheets: ", err);
       }
     }
 
-    // 3. Send a message to Google Sheets
+    // 3. WRITE NEW MESSAGES TO THE SHEET
     async function postMessage() {
-      const name = usernameInput.value.trim();
+      const nameInput = document.getElementById('usernameInput') || document.querySelector('input[placeholder*="name"]');
+      const messageInput = document.getElementById('messageInput') || document.querySelector('input[placeholder*="message"]');
+      
+      if (!nameInput || !messageInput) return;
+      
+      const name = nameInput.value.trim();
       const message = messageInput.value.trim();
 
       if (!name || !message) return;
 
-      // Lock input temporarily to prevent double clicking
-      messageInput.disabled = true;
+      // --- CHAT ACCELERATOR (LOCAL ECHO) ---
+      // Draw the text instantly on screen so the UI feels snappy while Google processes rows
+      const messagesArea = document.getElementById('messagesArea') || document.querySelector('.messages-area') || document.body;
+      const localBubble = document.createElement('div');
+      localBubble.className = 'message-bubble';
+      localBubble.style.cssText = "background:#f1f3f4; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd; width:fit-content; max-width:70%; opacity:0.8;";
+      
+      localBubble.innerHTML = `
+        <div style="font-size:0.75rem; color:#555; font-weight:bold;">${name} <span style="font-weight:normal; font-size:0.7rem; color:#999; margin-left:5px;">Sending...</span></div>
+        <div style="font-size:0.95rem; color:#444; margin-top:3px;">${message}</div>
+      `;
+      messagesArea.appendChild(localBubble);
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+
+      // Clear typing space instantly for the next thought
+      messageInput.value = '';
+      messageInput.focus();
 
       try {
+        // Send payload safely to Google Sheets via POST request
         await fetch(WEB_APP_URL, {
           method: 'POST',
-          mode: 'no-cors', // Bypasses browser cross-origin policy limits
+          mode: 'no-cors', // Bypasses browser restriction rules for cloud endpoints
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: name, message: message })
         });
 
-        // Clear only the message box layout, preserve user's name
-        messageInput.value = '';
-        messageInput.disabled = false;
-        messageInput.focus();
-
-        // Refresh UI data right after updating spreadsheet rows
-        setTimeout(fetchMessages, 1000);
+        // Silently pull the official sheet updates 1.5 seconds later
+        setTimeout(fetchMessages, 1500);
       } catch (err) {
-        console.error("Error sending chat data: ", err);
-        messageInput.disabled = false;
+        console.error("Error writing data to Google Sheets: ", err);
+        localBubble.remove(); // Drop temporary local bubble if request crashed
+        alert("Could not reach message board database.");
       }
     }
 
-    // Event Listeners for actions
-    sendBtn.addEventListener('click', postMessage);
-    messageInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') postMessage();
-    });
+    // 4. BIND ACTION LISTENERS
+    document.addEventListener("DOMContentLoaded", () => {
+      const sendBtn = document.querySelector('button') || document.querySelector('.send-btn') || document.getElementById('sendBtn');
+      const messageInput = document.querySelector('input[placeholder*="message"]');
 
-    // Automatically poll every 5 seconds to get updates from other users
-    fetchMessages();
-    setInterval(fetchMessages, 2000);
+      if (sendBtn) sendBtn.addEventListener('click', postMessage);
+      if (messageInput) {
+        messageInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') postMessage();
+        });
+      }
+
+      // Initial feed load on boot
+      fetchMessages();
+      
+      // Keep feed alive by polling the spreadsheet rows silently every 3 seconds
+      setInterval(fetchMessages, 3000);
+    });
   </script>
+
 
 </body>
 </html>
